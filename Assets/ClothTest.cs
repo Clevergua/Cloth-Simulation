@@ -13,7 +13,7 @@ public class ClothTest : MonoBehaviour
     [SerializeField]
     private float deltaTime;
     [SerializeField]
-    private List<int> movableIndices;
+    private List<FixedParticle> fixedParticleList;
     [SerializeField]
     private Vector3 g;
     [SerializeField]
@@ -71,19 +71,12 @@ public class ClothTest : MonoBehaviour
             mesh.SetTriangles(oldMesh.triangles, 0);
             triangles = oldMesh.triangles;
         }
-        HashSet<int> movableIndexSet = new HashSet<int>();
-        foreach (var index in movableIndices)
+        Dictionary<int, Vector3> index2FixedPosition = new Dictionary<int, Vector3>();
+        foreach (var fixedParticle in fixedParticleList)
         {
-            if (!movableIndexSet.Contains(index))
-            {
-                movableIndexSet.Add(index);
-            }
-            else
-            {
-                //do nothing..
-            }
+            index2FixedPosition[fixedParticle.index] = fixedParticle.position;
         }
-        cloth = new ClothSimulation.Cloth(mesh, clothCalculationType, movableIndexSet, g, springK, damping, particleMass, bendingK);
+        cloth = new ClothSimulation.Cloth(mesh, clothCalculationType, fixedParticleList, g, springK, damping, particleMass, bendingK);
         meshFilter.mesh = mesh;
     }
     void Update()

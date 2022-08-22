@@ -13,7 +13,7 @@
         private float damping = 0.9f;
         private float particleMass = 1;
         private float bendingK = 5;
-
+        private List<FixedParticle> fixedParticleList;
         private List<Spring> springs;
         private Vector3[] particleIndex2Gradient;
         private Vector3[] xHats;
@@ -22,14 +22,14 @@
         private ClothCalculationType clothCalculationType;
         private List<BendContraintion> bendConstraintions;
 
-        public Cloth(Mesh mesh, ClothCalculationType clothCalculationType, HashSet<int> movableIndexSet, Vector3 g, float springK, float damping, float particleMass, float bendingK)
+        public Cloth(Mesh mesh, ClothCalculationType clothCalculationType, List<FixedParticle> fixedParticleList, Vector3 g, float springK, float damping, float particleMass, float bendingK)
         {
             this.g = g;
             this.springK = springK;
             this.damping = damping;
             this.particleMass = particleMass;
             this.bendingK = bendingK;
-
+            this.fixedParticleList = fixedParticleList;
             this.mesh = mesh;
             var triangles = mesh.triangles;
             var vertices = mesh.vertices;
@@ -93,7 +93,16 @@
             this.particles = new List<Particle>(vertices.Length);
             for (int i = 0; i < vertices.Length; i++)
             {
-                particles.Add(new Particle(i, vertices[i], Vector3.zero, !movableIndexSet.Contains(i)));
+                var movable = true;
+                foreach (var item in fixedParticleList)
+                {
+                    if (item.index == i)
+                    {
+                        movable = false;
+                        break;
+                    }
+                }
+                particles.Add(new Particle(i, vertices[i], Vector3.zero, movable));
             }
             this.springs = new List<Spring>(edgeList.Count);
             // var edgeLengthList = new List<float>();
@@ -243,12 +252,20 @@
                 particles[constraintion.vertexIndex3].velocity += (f4 / particleMass) * deltaTime;
             }
 
+            foreach (var item in fixedParticleList)
+            {
+                var particle = particles[item.index];
+                particle.velocity = Vector3.zero;
+                particle.position = item.position;
+            }
+
             for (int i = 0; i < particles.Count; i++)
             {
                 var particle = particles[i];
                 particle.velocity += (particle.position - xHats[i]) / deltaTime;
-                verticesResult[i] = particles[i].position;
+                verticesResult[i] = particle.position;
             }
+
             return verticesResult;
         }
 
