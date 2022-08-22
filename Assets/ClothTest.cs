@@ -9,7 +9,7 @@ public class ClothTest : MonoBehaviour
     [SerializeField]
     ClothCalculationType clothCalculationType;
     ClothSimulation.Cloth cloth;
-    private List<int> triangles;
+    private int[] triangles;
     [SerializeField]
     private float deltaTime;
     [SerializeField]
@@ -24,40 +24,53 @@ public class ClothTest : MonoBehaviour
     private float particleMass;
     [SerializeField]
     private float bendingK;
-
+    [SerializeField]
+    private Mesh mesh;
     // Start is called before the first frame update
     void Start()
     {
-        var mesh = new Mesh();
-        var length = 16;
-        var width = 16;
-        var space = new Vector2(1f, 1f);
-        var vertices = new List<Vector3>(length * width);
-        var triangleCount = (width - 1) * (length - 1) * 2;
-        triangles = new List<int>(triangleCount * 3);
-        for (int x = 0; x < length; x++)
+        if (mesh == null)
         {
-            for (int y = 0; y < width; y++)
+            mesh = new Mesh();
+            var length = 16;
+            var width = 16;
+            var space = new Vector2(1f, 1f);
+            var vertices = new List<Vector3>(length * width);
+            var triangleCount = (width - 1) * (length - 1) * 2;
+            triangles = new int[triangleCount * 3];
+            for (int x = 0; x < length; x++)
             {
-                vertices.Add(new Vector3(x * space.x, Mathf.Sqrt(x * space.x * x * space.x + y * space.y * y * space.y), y * space.y));
+                for (int y = 0; y < width; y++)
+                {
+                    vertices.Add(new Vector3(x * space.x, Mathf.Sqrt(x * space.x * x * space.x + y * space.y * y * space.y), y * space.y));
+                }
             }
+            var index = 0;
+            for (int y = 0; y < width - 1; y++)
+            {
+                for (int x = 0; x < length - 1; x++)
+                {
+                    var s = x + y * length;
+                    triangles[index++] = (s + length + 1);
+                    triangles[index++] = (s + length);
+                    triangles[index++] = (s);
+                    triangles[index++] = (s);
+                    triangles[index++] = (s + 1);
+                    triangles[index++] = (s + length + 1);
+                }
+            }
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
         }
-        for (int y = 0; y < width - 1; y++)
+        else
         {
-            for (int x = 0; x < length - 1; x++)
-            {
-                var s = x + y * length;
-                triangles.Add(s + length + 1);
-                triangles.Add(s + length);
-                triangles.Add(s);
-
-                triangles.Add(s);
-                triangles.Add(s + 1);
-                triangles.Add(s + length + 1);
-            }
+            //do not create mesh
+            var oldMesh = mesh;
+            mesh = new Mesh();
+            mesh.SetVertices(oldMesh.vertices);
+            mesh.SetTriangles(oldMesh.triangles, 0);
+            triangles = oldMesh.triangles;
         }
-        mesh.SetVertices(vertices);
-        mesh.SetTriangles(triangles, 0);
         HashSet<int> movableIndexSet = new HashSet<int>();
         foreach (var index in movableIndices)
         {
@@ -81,10 +94,13 @@ public class ClothTest : MonoBehaviour
     // Update is called once per frame
     public void UpdateOnce()
     {
-        var verticesCache = cloth.Update(deltaTime);
-        meshFilter.mesh.SetVertices(verticesCache);
-        meshFilter.mesh.SetTriangles(triangles, 0);
-        meshFilter.mesh.RecalculateNormals();
-        meshFilter.mesh.OptimizeReorderVertexBuffer();
+        if (cloth != null)
+        {
+            var verticesCache = cloth.Update(deltaTime);
+            meshFilter.mesh.SetVertices(verticesCache);
+            meshFilter.mesh.SetTriangles(triangles, 0);
+            meshFilter.mesh.RecalculateNormals();
+            meshFilter.mesh.OptimizeReorderVertexBuffer();
+        }
     }
 }

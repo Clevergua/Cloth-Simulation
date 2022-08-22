@@ -395,13 +395,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   meshFilter: {fileID: 1248175037}
   clothCalculationType: 1
-  deltaTime: 0.02
+  deltaTime: 0.01
   movableIndices: 000000000f000000
   g: {x: 0, y: -10, z: 0}
   springK: 5000
   damping: 0.95
-  particleMass: 5
-  bendingK: 3
+  particleMass: 10
+  bendingK: 0.1
+  mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1248175035
 Transform:
   m_ObjectHideFlags: 0

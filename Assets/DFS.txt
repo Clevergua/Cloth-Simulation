@@ -1,0 +1,12 @@
+create stack { root }
+while(stack is not empty)
+    current = stack.peek()
+    if current is target 
+        return current
+    else
+        if current has unvisited child node
+            push one unvisited node to stack
+        else
+            stack.pop()
+end while
+print("not found!")
