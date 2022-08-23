@@ -21,9 +21,11 @@
         private Vector3[] verticesResult;
         private ClothCalculationType clothCalculationType;
         private List<BendContraintion> bendConstraintions;
+        private IEnumerable<SphereCollider> sphereColliders;
 
-        public Cloth(Mesh mesh, ClothCalculationType clothCalculationType, List<FixedParticle> fixedParticleList, Vector3 g, float springK, float damping, float particleMass, float bendingK)
+        public Cloth(Mesh mesh, ClothCalculationType clothCalculationType, List<FixedParticle> fixedParticleList, Vector3 g, float springK, float damping, float particleMass, float bendingK, IEnumerable<SphereCollider> sphereColliders)
         {
+            this.sphereColliders = sphereColliders;
             this.g = g;
             this.springK = springK;
             this.damping = damping;
@@ -251,7 +253,27 @@
                 particles[constraintion.vertexIndex2].velocity += (f3 / particleMass) * deltaTime;
                 particles[constraintion.vertexIndex3].velocity += (f4 / particleMass) * deltaTime;
             }
+            foreach (var sphereCollider in sphereColliders)
+            {
+                foreach (var particle in particles)
+                {
+                    if (particle.movable)
+                    {
+                        var radius = sphereCollider.radius + 0.05f;
+                        var magnitude = (particle.position - sphereCollider.transform.position).magnitude;
+                        if (magnitude <= radius)
+                        {
+                            var normalized = (particle.position - sphereCollider.transform.position) / magnitude;
+                            particle.position = sphereCollider.transform.position + normalized * radius;
+                            particle.velocity = Vector3.zero;
+                        }
+                        else
+                        {
 
+                        }
+                    }
+                }
+            }
             foreach (var item in fixedParticleList)
             {
                 var particle = particles[item.index];
@@ -265,7 +287,6 @@
                 particle.velocity += (particle.position - xHats[i]) / deltaTime;
                 verticesResult[i] = particle.position;
             }
-
             return verticesResult;
         }
 
